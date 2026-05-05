@@ -61,9 +61,9 @@ export const auth = betterAuth({
   ],
   trustedOrigins: [
     "rivamobile://",
-    ...(process.env.NODE_ENV === "development"
-      ? ["exp://", "exp://**", "exp://192.168.*.*:*/**"]
-      : []),
+    // ...(process.env.NODE_ENV === "development"
+    ...["exp://", "exp://**", "exp://192.168.*.*:*/**"]
+    // : []),
   ],
 
 });
