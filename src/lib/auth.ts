@@ -1,27 +1,33 @@
 import { db } from "@/db";
-import { betterAuth } from "better-auth";
+import * as schema from "@/db/schema";
+import { env } from "@/env";
+import { betterAuth, type BetterAuthOptions } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-// import * as schema from "@/db/schema";
-// import { env } from "@/lib/env/server";
 import { expo } from "@better-auth/expo";
-import { lastLoginMethod } from "better-auth/plugins";
-import { admin } from "better-auth/plugins/admin";
+import { admin, customSession, lastLoginMethod } from "better-auth/plugins";
 
-export const auth = betterAuth({
+const authOptions = {
+  secret: env.BETTER_AUTH_SECRET,
+  baseURL: env.BETTER_AUTH_URL,
   database: drizzleAdapter(db, {
     provider: "pg",
-    // schema: {
-    //   user: schema.userSchema,
-    //   session: schema.sessionSchema,
-    //   account: schema.accountSchema,
-    //   verification: schema.verificationSchema,
-    // },
+    schema: {
+      user: schema.userSchema,
+      session: schema.sessionSchema,
+      account: schema.accountSchema,
+      verification: schema.verificationSchema,
+    },
   }),
   user: {
     additionalFields: {
       onboarded: {
         type: "boolean",
         defaultValue: false,
+      },
+      accountStatus: {
+        type: "string",
+        defaultValue: "active",
+        input: false,
       },
     },
     deleteUser: {
@@ -40,16 +46,16 @@ export const auth = betterAuth({
   },
   socialProviders: {
     google: {
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
     },
     github: {
-      clientId: process.env.GITHUB_CLIENT_ID!,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+      clientId: env.GITHUB_CLIENT_ID,
+      clientSecret: env.GITHUB_CLIENT_SECRET,
     },
   },
   advanced: {
-    cookiePrefix: process.env.BETTER_AUTH_SESSION_PREFIX!,
+    cookiePrefix: env.BETTER_AUTH_SESSION_PREFIX,
     useSecureCookies: process.env.NODE_ENV === "production",
   },
   plugins: [
@@ -57,7 +63,7 @@ export const auth = betterAuth({
       storeInDatabase: true,
     }),
     admin(),
-    expo()
+    expo(),
   ],
   trustedOrigins: [
     "rivamobile://",
@@ -66,4 +72,17 @@ export const auth = betterAuth({
     // : []),
   ],
 
+} satisfies BetterAuthOptions;
+
+export const auth = betterAuth({
+  ...authOptions,
+  plugins: [
+    ...(authOptions.plugins ?? []),
+    customSession(async ({ user, session }) => {
+      return {
+        user,
+        session,
+      };
+    }, authOptions),
+  ],
 });

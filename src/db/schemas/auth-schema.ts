@@ -1,7 +1,7 @@
 import { relations } from "drizzle-orm";
 import { pgTable, text, timestamp, boolean, index } from "drizzle-orm/pg-core";
 
-export const user = pgTable("user", {
+export const userSchema = pgTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
@@ -17,10 +17,15 @@ export const user = pgTable("user", {
   banned: boolean("banned").default(false),
   banReason: text("ban_reason"),
   banExpires: timestamp("ban_expires"),
-  onboarded: boolean("onboarded").default(false).notNull(),
+  onboarded: boolean("onboarded").notNull().default(false),
+  // Riva-specific account lifecycle, distinct from Better Auth moderation bans.
+  accountStatus: text("account_status", { enum: ["active", "deactivated"] })
+    .notNull()
+    .default("active"),
+  deactivatedAt: timestamp("deactivated_at"),
 });
 
-export const session = pgTable(
+export const sessionSchema = pgTable(
   "session",
   {
     id: text("id").primaryKey(),
@@ -34,13 +39,13 @@ export const session = pgTable(
     userAgent: text("user_agent"),
     userId: text("user_id")
       .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+      .references(() => userSchema.id, { onDelete: "cascade" }),
     impersonatedBy: text("impersonated_by"),
   },
-  (table) => [index("session_userId_idx").on(table.userId)],
+  (table) => [index("session_table_userId_idx").on(table.userId)],
 );
 
-export const account = pgTable(
+export const accountSchema = pgTable(
   "account",
   {
     id: text("id").primaryKey(),
@@ -48,7 +53,7 @@ export const account = pgTable(
     providerId: text("provider_id").notNull(),
     userId: text("user_id")
       .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+      .references(() => userSchema.id, { onDelete: "cascade" }),
     accessToken: text("access_token"),
     refreshToken: text("refresh_token"),
     idToken: text("id_token"),
@@ -61,10 +66,10 @@ export const account = pgTable(
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
-  (table) => [index("account_userId_idx").on(table.userId)],
+  (table) => [index("account_table_userId_idx").on(table.userId)],
 );
 
-export const verification = pgTable(
+export const verificationSchema = pgTable(
   "verification",
   {
     id: text("id").primaryKey(),
@@ -77,24 +82,24 @@ export const verification = pgTable(
       .$onUpdate(() => /* @__PURE__ */ new Date())
       .notNull(),
   },
-  (table) => [index("verification_identifier_idx").on(table.identifier)],
+  (table) => [index("verification_table_identifier_idx").on(table.identifier)],
 );
 
-export const userRelations = relations(user, ({ many }) => ({
-  sessions: many(session),
-  accounts: many(account),
+export const userTableRelations = relations(userSchema, ({ many }) => ({
+  sessionTables: many(sessionSchema),
+  accountTables: many(accountSchema),
 }));
 
-export const sessionRelations = relations(session, ({ one }) => ({
-  user: one(user, {
-    fields: [session.userId],
-    references: [user.id],
+export const sessionTableRelations = relations(sessionSchema, ({ one }) => ({
+  userTable: one(userSchema, {
+    fields: [sessionSchema.userId],
+    references: [userSchema.id],
   }),
 }));
 
-export const accountRelations = relations(account, ({ one }) => ({
-  user: one(user, {
-    fields: [account.userId],
-    references: [user.id],
+export const accountTableRelations = relations(accountSchema, ({ one }) => ({
+  userTable: one(userSchema, {
+    fields: [accountSchema.userId],
+    references: [userSchema.id],
   }),
 }));

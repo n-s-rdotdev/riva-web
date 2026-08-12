@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Riva Web
+
+Riva Web is the Next.js application for Riva. It serves the browser app and the shared backend/API surface consumed by the Expo mobile app.
+
+## Current Scope
+
+- Next.js App Router UI
+- Better Auth social login with Google and GitHub
+- Drizzle + Neon Postgres schema
+- tRPC endpoint at `/api/trpc`
+- Protected app shell for dashboard, transactions, spaces, and sources
+- Redis helper foundation for cache-aside work
+- PostHog helper foundation for privacy-safe analytics
 
 ## Getting Started
 
-First, run the development server:
+Install dependencies and run the development server:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) with your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Required values are validated in `src/env.ts`:
 
-## Learn More
+- `DATABASE_URL`
+- `BETTER_AUTH_SECRET`
+- `BETTER_AUTH_URL`
+- `BETTER_AUTH_SESSION_PREFIX`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `GITHUB_CLIENT_ID`
+- `GITHUB_CLIENT_SECRET`
+- `UPSTASH_REDIS_REST_URL`
+- `UPSTASH_REDIS_REST_TOKEN`
+- `NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN`
+- `NEXT_PUBLIC_POSTHOG_HOST`
 
-To learn more about Next.js, take a look at the following resources:
+Keep local `.env` files out of Git. Rotate secrets if they are ever shared or committed.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Verification
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+pnpm lint
+pnpm exec tsc --noEmit
+```
 
-## Deploy on Vercel
+## Docs
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Start with the shared project docs in `../docs`, especially:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `../docs/project-overview.md`
+- `../docs/feature-implementation-order.md`
+- `../docs/api-implementation-overview.md`
